@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  docker:
+    build: docker
+    container_name: worker-1
+    networks:
+      - docker-cluster
+    tty: true
+
+networks:
+  docker-cluster:
+    name: docker-cluster
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.244.0/28
