@@ -7,47 +7,56 @@ use stdClass;
 
 class FileStorageItem
 {
-    const UPLOADS_DIR = '../../../uploads/';
+    const UPLOADS_DIR = 'uploads/';
 
     public static string $tableName = 'file_storage_item';
 
     /**
+     * @param $userId
      * @return array
      */
-    public static function uploadFile(): array
+    public static function uploadFile($userId = null): array
     {
         $errors = [];
-        $userId = User::checkLogged();
 
-        if (!empty($_FILES) && $_FILES["filename"]["error"] == UPLOAD_ERR_OK) {
-            $baseUrl = self::UPLOADS_DIR;
-            $fileName = $_FILES["filename"]["name"];
-            $parts = explode('.', $fileName);
-            $extension = array_pop($parts);
-            $fileName = implode($parts);
-            $fileName = $fileName . '(' . date('Y-m-d H:i:s') . ')';
-            $path = self::UPLOADS_DIR . $fileName . '.' . $extension;
-            $createdAt = time();
-            move_uploaded_file($_FILES["filename"]["tmp_name"], $path);
-
-            $db = Db::getConnection();
-            $sql = 'INSERT INTO  ' . self::$tableName . ' (user_id, base_url, path, type, name, created_at) VALUES (:user_id, :base_url, :path, :type, :name, :created_at)';
-            $result = $db->prepare($sql);
-            $result->bindParam(':user_id', $userId, \PDO::PARAM_INT);
-            $result->bindParam(':base_url', $baseUrl, \PDO::PARAM_STR);
-            $result->bindParam(':path', $path, \PDO::PARAM_STR);
-            $result->bindParam(':type', $extension, \PDO::PARAM_STR);
-            $result->bindParam(':name', $fileName, \PDO::PARAM_STR);
-            $result->bindParam(':created_at', $createdAt, \PDO::PARAM_INT);
-
-            if (!$result->execute()) {
-                $errors[] = 'Ошибка при вставке записи в БД!';
-            }
-
+        if (empty($_FILES)) {
             return $errors;
         }
 
-        $errors[] = 'Файл не выбран!';
+        if (!empty($_FILES) && $_FILES["filename"]["error"] != UPLOAD_ERR_OK) {
+            $errors[] = 'Код ошибки при загрузке файла: ' . $_FILES["filename"]["error"];
+            return $errors;
+        }
+
+        $baseUrl = self::UPLOADS_DIR;
+        $fileName = $_FILES["filename"]["name"];
+        $parts = explode('.', $fileName);
+        $extension = array_pop($parts);
+        $fileName = implode($parts);
+        $fileName = $fileName . '(' . date('Y-m-d H:i:s') . ')';
+        $path = self::UPLOADS_DIR . $fileName . '.' . $extension;
+        $createdAt = time();
+        $isUpload = move_uploaded_file($_FILES["filename"]["tmp_name"], $path);
+
+        if (!$isUpload) {
+            $errors[] = 'Ошибка загрузки на диск! Путь загрузки: ' . $path;
+            return $errors;
+        }
+
+        $db = Db::getConnection();
+        $sql = 'INSERT INTO  ' . self::$tableName . ' (user_id, base_url, path, type, name, created_at) VALUES (:user_id, :base_url, :path, :type, :name, :created_at)';
+        $result = $db->prepare($sql);
+        $result->bindParam(':user_id', $userId, \PDO::PARAM_INT);
+        $result->bindParam(':base_url', $baseUrl, \PDO::PARAM_STR);
+        $result->bindParam(':path', $path, \PDO::PARAM_STR);
+        $result->bindParam(':type', $extension, \PDO::PARAM_STR);
+        $result->bindParam(':name', $fileName, \PDO::PARAM_STR);
+        $result->bindParam(':created_at', $createdAt, \PDO::PARAM_INT);
+
+        if (!$result->execute()) {
+            $errors[] = 'Ошибка при вставке записи в БД!';
+        }
+
         return $errors;
     }
 
@@ -103,9 +112,11 @@ class FileStorageItem
             if ($result->execute()) {
                 if (file_exists($filePath)) {
                     unlink($filePath);
+                } else {
+                    $errors[] = 'Ошибка удаления файла с диска!';
                 }
             } else {
-                $errors[] = 'Ошибка удаления файла!';
+                $errors[] = 'Ошибка удаления файла из БД!';
             }
 
             return $errors;

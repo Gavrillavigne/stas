@@ -2,12 +2,12 @@
 <html>
 <head>
     <title>PHP-UP login</title>
-    <link rel="stylesheet" href="login.css">
+    <link rel="stylesheet" href="<?php echo '/frontend/web/css/login.css' ?>">
     <meta charset="utf-8"/>
 </head>
 <body>
 <div class="registration-cssave">
-    <form action="actionLogin.php" method="post">
+    <form method="post">
         <h3 class="text-center">Форма входа</h3>
         <div class="form-group">
             <input class="form-control item" type="email" name="email" placeholder="Email" required>

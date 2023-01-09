@@ -42,5 +42,4 @@ function loadVendor(string $class): void
             require $file;
         }
     }
-
 }
