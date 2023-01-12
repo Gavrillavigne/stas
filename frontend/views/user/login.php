@@ -17,17 +17,25 @@
                    required>
         </div>
         <div class="form-group">
+            <input class="form-control item" type="hidden" id="g-recaptcha-response" name="g-recaptcha-response">
+        </div>
+
+        <div class="form-group">
+            <?php
+            if (!empty($errors) && is_array($errors)) {
+                foreach ($errors as $error) { ?>
+                    <p style="color: red"><?php echo $error; ?></p><br>
+                <?php }
+            } ?>
+        </div>
+
+        <div class="form-group">
             <input class="btn btn-primary btn-block create-account" type="submit" name="submit" value="Вход в аккаунт">
         </div>
     </form>
-</div>
-<div>
-    <?php
-    if (!empty($errors) && is_array($errors)) {
-        foreach ($errors as $error) {
-            echo $error;
-        }
-    } ?>
+
+    <?php require_once ROOT .'/frontend/views/captcha/recaptcha-v3.php'; ?>
+
 </div>
 </body>
 </html>
