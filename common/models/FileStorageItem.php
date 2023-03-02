@@ -61,23 +61,6 @@ class FileStorageItem
     }
 
     /**
-     * @return array
-     */
-    public static function getAllFileNames(): array
-    {
-        $db = Db::getConnection();
-
-        $files = [];
-        $result = $db->query('SELECT id, name, type FROM ' . self::$tableName . ' ORDER BY id DESC');
-
-        while ($row = $result->fetch()) {
-            $files[$row['id']]['file_name'] = $row['name'] . '.' . $row['type'];
-        }
-
-        return $files;
-    }
-
-    /**
      * @param int|null $userId
      * @return array
      */
@@ -86,10 +69,11 @@ class FileStorageItem
         $db = Db::getConnection();
 
         $files = [];
-        $result = $db->query('SELECT id, name, type FROM ' . self::$tableName . ' WHERE user_id=' . $userId . ' ORDER BY id DESC');
+        $result = $db->query('SELECT id, base_url, name, type FROM ' . self::$tableName . ' WHERE user_id=' . $userId . ' ORDER BY id DESC');
 
         while ($row = $result->fetch()) {
-            $files[$row['id']]['file_name'] = $row['name'] . '.' . $row['type'];
+            $files[$row['id']]['fileName'] = $row['name'] . '.' . $row['type'];
+            $files[$row['id']]['filePath'] = $row['base_url'] . $row['name'] . '.' . $row['type'];
         }
 
         return $files;

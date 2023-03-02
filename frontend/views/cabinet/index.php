@@ -15,15 +15,11 @@
 <div>
     <p>Список загруженных файлов:</p>
     <?php foreach ($files as $id => $file) {
-        echo $file['file_name'] ?>
+        echo $file['fileName'] ?>
         <form id="delete-<?php echo $id; ?>" method="post">
             <input type="hidden" name="delete" value="<?php echo $id; ?>">
             <input type="submit" value="Удалить"/>
-        </form>
-
-        <form id="download-<?php echo $id; ?>" method="post">
-            <input type="hidden" name="download" value="<?php echo $id; ?>">
-            <input type="submit" value="Скачать"/>
+            <a href="<?php echo $file['filePath']?>" download="<?php echo $file['fileName']?>">Скачать</a>
         </form>
         <br/>
     <?php } ?>
