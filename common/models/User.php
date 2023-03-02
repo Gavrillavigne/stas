@@ -22,7 +22,7 @@ class User
         $result->execute();
 
         $user = $result->fetch(\PDO::FETCH_ASSOC);
-        if ($user) {
+        if (!empty($user)) {
             return $user['id'];
         }
 
