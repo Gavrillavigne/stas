@@ -1,8 +1,17 @@
+<?php
+
+use services\oauth\VKontakteOAuth2Service;
+
+/* @var $oauthService VKontakteOAuth2Service */
+?>
+
 <!DOCTYPE html>
 <html>
 <head>
     <title>PHP-UP login</title>
     <link rel="stylesheet" href="<?php echo '/frontend/web/css/login.css' ?>">
+    <link rel="stylesheet" href="<?php echo '/frontend/web/css/socials.css' ?>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <meta charset="utf-8"/>
 </head>
 <body>
@@ -31,6 +40,12 @@
 
         <div class="form-group">
             <input class="btn btn-primary btn-block create-account" type="submit" name="submit" value="Вход в аккаунт">
+        </div>
+
+        <div class="form-group">
+            <a class="btn btn-primary btn-block create-account" href="<?php echo $oauthService->getLink(); ?>">
+                <i class="fa fa-vk"></i>
+            </a>
         </div>
     </form>
 

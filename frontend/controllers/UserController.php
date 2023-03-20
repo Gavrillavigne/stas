@@ -1,6 +1,7 @@
 <?php
 
 use common\models\User;
+use services\oauth\VKontakteOAuth2Service;
 
 class UserController
 {
@@ -8,24 +9,57 @@ class UserController
     {
         $email = '';
         $password = '';
+        $errors = [];
+        $oauthService = (new VKontakteOAuth2Service('login/'));
 
+        // Авторизация через соц. сети
+        if (!empty($_GET['code'])) {
+            $oauthParams = $oauthService->getTokenParams($_GET['code']);
+            $token = json_decode(file_get_contents('https://oauth.vk.com/access_token' . '?' . urldecode(http_build_query($oauthParams))), true);
+
+            if (!empty($token['access_token'])) {
+                $params = $oauthService->getUserParams($token);
+                $userInfo = json_decode(file_get_contents('https://api.vk.com/method/users.get' . '?' . urldecode(http_build_query($params))), true);
+
+                if (isset($userInfo['response'][0]['id'])) {
+                    $userInfo = $userInfo['response'][0];
+                    $userId = User::checkOauthUserData('vk', $userInfo['id']);
+                }
+            }
+
+            if (!$this->redirectToCabinet($userId)) {
+                $errors[] = 'Неверные данные для входа через социальную сеть';
+            }
+        }
+
+        // Обычная авторизация
         if (!empty($_POST['submit'])) {
             $email = $_POST['email'];
             $password = $_POST['password'];
-
-            $errors = [];
             $userId = User::checkUserData($email, $password);
 
-            if ($userId === false || !$this->isValidCaptcha()) {
+            if (!$this->redirectToCabinet($userId)) {
                 $errors[] = 'Неверные данные для входа на сайт';
-            } else {
-                User::auth($userId);
-                header('Location: /cabinet');
             }
         }
 
         require_once(ROOT . '/frontend/views/user/login.php');
         return true;
+    }
+
+    /**
+     * @param $userId
+     * @return bool
+     */
+    private function redirectToCabinet($userId)
+    {
+        if (!empty($userId) && $this->isValidCaptcha()) {
+            User::auth($userId);
+            header('Location: /cabinet');
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public function actionLogout()
@@ -39,13 +73,34 @@ class UserController
     public function actionRegister()
     {
         $result = false;
+        $errors = [];
+        $oauthService = (new VKontakteOAuth2Service('register/'));
+
+        // Регистрация через соц. сети
+        if (!empty($_GET['code'])) {
+            $oauthParams = $oauthService->getTokenParams($_GET['code']);
+            $token = json_decode(file_get_contents('https://oauth.vk.com/access_token' . '?' . urldecode(http_build_query($oauthParams))), true);
+
+            if (!empty($token['access_token'])) {
+                $params = $oauthService->getUserParams($token);
+                $userInfo = json_decode(file_get_contents('https://api.vk.com/method/users.get' . '?' . urldecode(http_build_query($params))), true);
+
+                if (isset($userInfo['response'][0]['id'])) {
+                    $userInfo = $userInfo['response'][0];
+                    $result = User::registerOauth($userInfo);
+                    $userId = User::checkOauthUserData('vk', $userInfo['id']);
+                }
+            }
+
+            if (!$this->redirectToCabinet($userId)) {
+                $errors[] = 'Неверные данные для регистрации через социальную сеть';
+            }
+        }
 
         if (isset($_POST['submit'])) {
             $name = $_POST['name'] ?? '';
             $email = $_POST['email'] ?? '';
             $password = $_POST['password'] ?? '';
-
-            $errors = [];
 
             if (!User::checkName($name)) {
                 $errors[] = 'Имя не должно быть короче 2-х символов';
