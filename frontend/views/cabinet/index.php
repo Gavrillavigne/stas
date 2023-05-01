@@ -19,7 +19,9 @@
         <form id="delete-<?php echo $id; ?>" method="post">
             <input type="hidden" name="delete" value="<?php echo $id; ?>">
             <input type="submit" value="Удалить"/>
-            <a href="<?php echo $file['filePath']?>" download="<?php echo $file['fileName']?>">Скачать</a>
+            <a href="<?php echo $file['filePath']; ?>" download="<?php echo $file['fileName']; ?>">Скачать</a>
+<!--            <a href="--><?php //echo $file['filePath']; ?><!--" target="_blank">Открыть</a>-->
+            <a href="<?php echo 'cabinet/open-file/' . $file['filePath']; ?>" target="_blank">Открыть</a>
         </form>
         <br/>
     <?php } ?>

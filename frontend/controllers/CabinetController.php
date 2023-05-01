@@ -46,4 +46,23 @@ class CabinetController
         return true;
     }
 
+    /**
+     * @param array $params
+     * @return bool
+     */
+    public function actionOpenFile(array $params): bool
+    {
+        if (!empty($params)) {
+            $result = FileStorageItem::openFile($params);
+
+            if ($result !== false) {
+                echo $result;
+                return true;
+            }
+        }
+
+        echo 'Error: Empty file path or File doesn\'t exist !';
+        return true;
+    }
+
 }

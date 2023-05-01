@@ -52,7 +52,7 @@ class Router
 
                 // Создать объект, вызвать action
                 $controllerObject = new $controllerName(); // не работает с неймспейсами
-                $result = call_user_func_array(array($controllerObject, $actionName), $parameters);
+                $result = call_user_func_array(array($controllerObject, $actionName), array($parameters));
 
                 if ($result != null) {
                     break;

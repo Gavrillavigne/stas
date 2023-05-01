@@ -4,6 +4,7 @@ namespace common\models;
 
 use common\components\Db;
 use stdClass;
+use dictionary\FileStorageDictionary;
 
 class FileStorageItem
 {
@@ -146,6 +147,37 @@ class FileStorageItem
 
         $errors[] = 'Файл не найден в БД!';
         return $errors;
+    }
+
+    /**
+     * @param array $params
+     * @return string|false
+     */
+    public static function openFile(array $params): string|false
+    {
+        $filePath = implode('/', $params);
+        $filePath = urldecode($filePath);
+        $fileContent = file_get_contents(ROOT . '/' . $filePath);
+
+        if (!empty($fileContent)) {
+            $fileName = array_pop($params);
+            $parts = explode('.', $fileName);
+            $extension = array_pop($parts);
+            $mimeType = FileStorageDictionary::$mimeTypes[$extension];
+
+            if (empty($mimeType)) {
+                return false;
+            }
+            header('Content-Type: ' . $mimeType);
+            header('Content-Length: ' . strlen($fileContent));
+            header('Content-disposition: inline; filename="' . $fileName . '"');
+            header('Cache-Control: public, must-revalidate, max-age=0');
+            header('Pragma: public');
+            header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
+
+        }
+
+        return $fileContent;
     }
 
 }
