@@ -6,6 +6,7 @@ return [
     'user/register' => 'user/register',
     'user/login' => 'user/login',
     'user/logout' => 'user/logout',
+    'files/download' => 'files/download',
 //    'user/login/forgotpass' => 'user/forgotpass',
 //    '.*.' => 'site/index',
 //    '' => 'site/index'

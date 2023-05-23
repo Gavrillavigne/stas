@@ -13,12 +13,29 @@ class FileStorageItem
     public static string $tableName = 'file_storage_item';
 
     /**
+     * @param $model
+     * @return bool
+     */
+    public static function hasAccess($model): bool
+    {
+        if (!empty($model)) {
+            $fileOwner = $model->user_id;
+            $currentUser = $_SESSION['user'] ?? null;
+
+            return $fileOwner == $currentUser;
+        }
+
+        return false;
+    }
+
+    /**
      * @param $userId
      * @return array
      */
     public static function uploadFile($userId = null): array
     {
         $errors = [];
+        $secureDir = '';
 
         if (empty($_FILES)) {
             return $errors;
@@ -29,13 +46,21 @@ class FileStorageItem
             return $errors;
         }
 
-        $baseUrl = self::UPLOADS_DIR;
+        if ($_POST['secure'] == 1) {
+            $secureDir = "secure/$userId/";
+            if (!self::checkSecureDir($userId)) {
+                $errors[] = 'Ошибка создания папки на диске! Путь к директории: ' . $secureDir;
+                return $errors;
+            }
+        }
+
+        $baseUrl = self::UPLOADS_DIR . $secureDir;
         $fileName = $_FILES["filename"]["name"];
         $parts = explode('.', $fileName);
         $extension = array_pop($parts);
         $fileName = implode($parts);
         $fileName = $fileName . '(' . date('Y-m-d H:i:s') . ')';
-        $path = self::UPLOADS_DIR . $fileName . '.' . $extension;
+        $path = $baseUrl . $fileName . '.' . $extension;
         $createdAt = time();
         $isUpload = move_uploaded_file($_FILES["filename"]["tmp_name"], $path);
 
@@ -62,6 +87,22 @@ class FileStorageItem
     }
 
     /**
+     * @param $userId
+     * @return bool
+     */
+    private static function checkSecureDir($userId): bool
+    {
+        $filename = self::UPLOADS_DIR . 'secure/' . $userId;
+
+        if (is_dir($filename)) {
+            return true;
+        }
+
+        mkdir($filename, 0775);
+        return is_dir($filename);
+    }
+
+    /**
      * @param int|null $userId
      * @return array
      */
@@ -73,8 +114,10 @@ class FileStorageItem
         $result = $db->query('SELECT id, base_url, name, type FROM ' . self::$tableName . ' WHERE user_id=' . $userId . ' ORDER BY id DESC');
 
         while ($row = $result->fetch()) {
+            $pos = strpos($row['base_url'], 'secure');
             $files[$row['id']]['fileName'] = $row['name'] . '.' . $row['type'];
             $files[$row['id']]['filePath'] = $row['base_url'] . $row['name'] . '.' . $row['type'];
+            $files[$row['id']]['isSecure'] = $pos !== false ? 1 : 0;
         }
 
         return $files;
@@ -132,6 +175,10 @@ class FileStorageItem
     {
         $errors = [];
         $model = self::getModelById($id);
+
+        if (!self::hasAccess($model)) {
+            header('Location: /user/login');
+        }
 
         if (!empty($model)) {
             $filePath = $model->path ?? '';

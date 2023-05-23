@@ -18,19 +18,35 @@
     <p>Список загруженных файлов:</p>
     <hr>
     <?php foreach ($files as $id => $file) {
-        $url = !empty($file['filePath']) ? getenv('DOMAIN') . '/' . $file['filePath'] : '';
-        $title = $file['fileName'] ?? '';
-        $path = !empty($file['filePath']) ? getenv('DOMAIN') . '/' . $file['filePath'] : '';
-        $desc = $file['fileName'] ?? '';
+        $url = $path = !empty($file['filePath']) ? getenv('DOMAIN') . '/' . $file['filePath'] : '';
+        $title = $desc = $file['fileName'] ?? '';
 
-        echo $file['fileName'] ?>
-        <form id="delete-<?php echo $id; ?>" method="post">
-            <input type="hidden" name="delete" value="<?php echo $id; ?>">
-            <input type="submit" value="Удалить"/>
+        $isSecure = $file['isSecure'];
+        $style = $isSecure ? "color: red" : '';
+        $url = $path = $isSecure
+            ? getenv('DOMAIN') . '/' . 'files/download/' . $id . '/' . $file['filePath']
+            : $path;
+        ?>
+
+        <span style="<?php echo $style; ?>"> <?php echo $file['fileName']; ?></span>
+    <form id="delete-<?php echo $id; ?>" method="post">
+        <input type="hidden" name="delete" value="<?php echo $id; ?>">
+        <input type="submit" value="Удалить"/>
+
+        <?php if ($isSecure) { ?>
+            </form>
+            <form id="download-<?php echo $id; ?>" method="post">
+                <input type="hidden" name="download" value="<?php echo $id; ?>">
+                <input type="submit" value="Скачать"/>
+            </form>
+        <?php } else { ?>
             <a href="<?php echo $file['filePath']; ?>" download="<?php echo $file['fileName']; ?>">Скачать</a>
-            <!--            <a href="--><?php //echo $file['filePath']; ?><!--" target="_blank">Открыть</a>-->
-            <a href="<?php echo 'cabinet/open-file/' . $file['filePath']; ?>" target="_blank">Открыть</a>
-        </form>
+        <?php } ?>
+        <!--            <a href="--><?php //echo $file['filePath']; ?><!--" target="_blank">Открыть</a>-->
+        <a href="<?php echo 'cabinet/open-file/' . $file['filePath']; ?>" target="_blank">Открыть</a>
+        <?php if (!$isSecure) { ?>
+            </form>
+        <?php } ?>
         <br>
         <div>
             <span>Поделиться файлом:</span><br>
@@ -52,7 +68,9 @@
 <p>Загрузить новый файл:</p>
 <form id="upload" method="post" enctype="multipart/form-data">
     Выберите файл:
-    <input type="file" name="filename" size="10"/><br/><br/>
+    <input type="file" name="filename" size="10"/><br/>
+    <input type="checkbox" name="secure" value="1"/>Разрешить скачивание только владельцу<br/>
+    <br/>
     <input type="submit" value="Загрузить"/>
 </form>
 
