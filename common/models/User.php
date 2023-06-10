@@ -52,7 +52,6 @@ class User
         return false;
     }
 
-
     /**
      * @param int $userId
      * @return void
@@ -68,10 +67,11 @@ class User
      */
     public static function checkLogged()
     {
-        session_start();
         if (!empty($_SESSION['user'])) {
             return $_SESSION['user'];
         }
+
+        session_start();
     }
 
     /**

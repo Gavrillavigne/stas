@@ -5,6 +5,7 @@ error_reporting(E_ERROR);
 
 use common\components\Db;
 use Dotenv\Dotenv;
+use components\Router;
 
 define('ROOT', dirname(__FILE__));
 

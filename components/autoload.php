@@ -1,19 +1,34 @@
 <?php
 
 spl_autoload_register(function ($class) {
-
-    $classFound = false;
-    $file = ROOT . '/' . str_replace('\\', '/', $class) . '.php';
-
-    if (file_exists($file)) {
-        $classFound = true;
-        require $file;
-    }
-
-    if (!$classFound) {
+    if (!loadClass($class)) {
         loadVendor($class);
     }
 });
+
+/**
+ * @param $class
+ * @return bool
+ */
+function loadClass($class): bool
+{
+    $namespaces = [
+        '' => '/',
+        'frontend\controllers\\' => '/frontend/controllers/'
+    ];
+
+    foreach ($namespaces as $namespace => $path) {
+        $file = ROOT . $path . str_replace('\\', '/', $class) . '.php';
+
+        if (file_exists($file)) {
+            // Подключить файл класса
+            require $file;
+            return true;
+        }
+    }
+
+    return false;
+}
 
 /**
  * @param string $class

@@ -29,6 +29,15 @@ class FileStorageItem
     }
 
     /**
+     * @param $model
+     * @return bool
+     */
+    public static function isExpire($model): bool
+    {
+        return !empty($model->expiration_time) && time() < $model->expiration_time;
+    }
+
+    /**
      * @param $userId
      * @return array
      */
@@ -36,6 +45,7 @@ class FileStorageItem
     {
         $errors = [];
         $secureDir = '';
+        $isSecure = 0;
 
         if (empty($_FILES)) {
             return $errors;
@@ -52,6 +62,7 @@ class FileStorageItem
                 $errors[] = 'Ошибка создания папки на диске! Путь к директории: ' . $secureDir;
                 return $errors;
             }
+            $isSecure = 1;
         }
 
         $baseUrl = self::UPLOADS_DIR . $secureDir;
@@ -62,6 +73,7 @@ class FileStorageItem
         $fileName = $fileName . '(' . date('Y-m-d H:i:s') . ')';
         $path = $baseUrl . $fileName . '.' . $extension;
         $createdAt = time();
+        $expirationTime = $_POST['expiration'] == 1 ? time() + 36000 : null;
         $isUpload = move_uploaded_file($_FILES["filename"]["tmp_name"], $path);
 
         if (!$isUpload) {
@@ -70,7 +82,7 @@ class FileStorageItem
         }
 
         $db = Db::getConnection();
-        $sql = 'INSERT INTO  ' . self::$tableName . ' (user_id, base_url, path, type, name, created_at) VALUES (:user_id, :base_url, :path, :type, :name, :created_at)';
+        $sql = 'INSERT INTO  ' . self::$tableName . ' (user_id, base_url, path, type, name, created_at, is_secure, expiration_time) VALUES (:user_id, :base_url, :path, :type, :name, :created_at, :is_secure, :expiration_time)';
         $result = $db->prepare($sql);
         $result->bindParam(':user_id', $userId, \PDO::PARAM_INT);
         $result->bindParam(':base_url', $baseUrl, \PDO::PARAM_STR);
@@ -78,6 +90,8 @@ class FileStorageItem
         $result->bindParam(':type', $extension, \PDO::PARAM_STR);
         $result->bindParam(':name', $fileName, \PDO::PARAM_STR);
         $result->bindParam(':created_at', $createdAt, \PDO::PARAM_INT);
+        $result->bindParam(':is_secure', $isSecure, \PDO::PARAM_INT);
+        $result->bindParam(':expiration_time', $expirationTime, \PDO::PARAM_INT);
 
         if (!$result->execute()) {
             $errors[] = 'Ошибка при вставке записи в БД!';
@@ -111,13 +125,13 @@ class FileStorageItem
         $db = Db::getConnection();
 
         $files = [];
-        $result = $db->query('SELECT id, base_url, name, type FROM ' . self::$tableName . ' WHERE user_id=' . $userId . ' ORDER BY id DESC');
+        $result = $db->query('SELECT * FROM ' . self::$tableName . ' WHERE user_id=' . $userId . ' ORDER BY id DESC');
 
         while ($row = $result->fetch()) {
-            $pos = strpos($row['base_url'], 'secure');
             $files[$row['id']]['fileName'] = $row['name'] . '.' . $row['type'];
             $files[$row['id']]['filePath'] = $row['base_url'] . $row['name'] . '.' . $row['type'];
-            $files[$row['id']]['isSecure'] = $pos !== false ? 1 : 0;
+            $files[$row['id']]['isSecure'] = $row['is_secure'];
+            $files[$row['id']]['expirationTime'] = $row['expiration_time'];
         }
 
         return $files;
@@ -178,6 +192,11 @@ class FileStorageItem
 
         if (!self::hasAccess($model)) {
             header('Location: /user/login');
+        }
+
+        if (!self::isExpire($model)) {
+            $errors[] = 'Время на скачивание файла истекло!';
+            return $errors;
         }
 
         if (!empty($model)) {

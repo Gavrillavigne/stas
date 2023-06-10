@@ -1,5 +1,7 @@
 <?php
 
+namespace frontend\controllers;
+
 use common\models\User;
 use services\oauth\VKontakteOAuth2Service;
 

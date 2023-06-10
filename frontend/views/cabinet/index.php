@@ -1,6 +1,13 @@
 <?php
 /** @var $files array */
 /** @var $errors array */
+
+$styles = [
+    0 => '',                // simple
+    1 => 'color: red',      // secure
+    2 => 'color: purple',   // expiration
+    3 => 'color: green',    // secure + expiration
+];
 ?>
 
 <!DOCTYPE html>
@@ -22,18 +29,29 @@
         $title = $desc = $file['fileName'] ?? '';
 
         $isSecure = $file['isSecure'];
-        $style = $isSecure ? "color: red" : '';
-        $url = $path = $isSecure
-            ? getenv('DOMAIN') . '/' . 'files/download/' . $id . '/' . $file['filePath']
+        $isExpiration = !empty($file['expirationTime']);
+
+        if ($isSecure && $isExpiration) {
+            $color = 3;
+        } elseif ($isExpiration) {
+            $color = 2;
+        } elseif ($isSecure) {
+            $color = 1;
+        } else {
+            $color = 0;
+        }
+
+        $url = $path = $isSecure || $isExpiration
+            ? getenv('DOMAIN') . '/' . 'files/download/' . $id
             : $path;
         ?>
 
-        <span style="<?php echo $style; ?>"> <?php echo $file['fileName']; ?></span>
+        <span style="<?php echo $styles[$color]; ?>"> <?php echo $file['fileName']; ?></span>
     <form id="delete-<?php echo $id; ?>" method="post">
         <input type="hidden" name="delete" value="<?php echo $id; ?>">
         <input type="submit" value="Удалить"/>
 
-        <?php if ($isSecure) { ?>
+        <?php if ($isSecure || $isExpiration) { ?>
             </form>
             <form id="download-<?php echo $id; ?>" method="post">
                 <input type="hidden" name="download" value="<?php echo $id; ?>">
@@ -70,6 +88,7 @@
     Выберите файл:
     <input type="file" name="filename" size="10"/><br/>
     <input type="checkbox" name="secure" value="1"/>Разрешить скачивание только владельцу<br/>
+    <input type="checkbox" name="expiration" value="1"/>Разрешить скачивание в течение 10ч после загрузки<br/>
     <br/>
     <input type="submit" value="Загрузить"/>
 </form>

@@ -1,28 +1,72 @@
 <?php
 
+namespace frontend\controllers;
+
 use common\models\FileStorageItem;
-use common\models\User;
 
 class FilesController
 {
     public function actionDownload(array $path)
     {
-        $user = $path[3] ?? null;
         $id = array_shift($path);
-        $currentUser = User::checkLogged() ?? null;
 
-        if ($user != $currentUser && !empty($user) && !empty($currentUser)) {
-            header('Location: /user/login');
-            return true;
+        /** @var FileStorageItem $model */
+        $model = FileStorageItem::getModelById($id);
+
+        if ($model->is_secure) {
+            $errors = $this->downloadSecureFile($model);
+
+            if (!empty($errors)) {
+                return $errors;
+            }
         }
 
-        $filePath = '/' . implode('/', $path);
+        if (!empty($model->expiration_time)) {
+            $errors = $this->downloadExpirationTimeFile($model);
+
+            if (!empty($errors)) {
+                return $errors;
+            }
+        }
+
+        FileStorageItem::downloadFile($id);
+        return true;
+    }
+
+    private function downloadSecureFile($model)
+    {
+        $errors = [];
+        if (!FileStorageItem::hasAccess($model)) {
+            $errors[] = 'У вас нет прав на скачивание файла!';
+            return $errors;
+        }
+
+        if (!empty($model->expiration_time)) {
+            $errors = $this->downloadExpirationTimeFile($model);
+
+            if (!empty($errors)) {
+                return $errors;
+            }
+        }
+
+        $filePath = '/' . $model->path;
         //заголовок для внутреннего редиректа
         header("X-Accel-Redirect: " . $filePath);
         //возвращаем Content-Type, чтобы браузер мог корректно обработать файл
         header('Content-Type: ' . mime_content_type($filePath));
-        FileStorageItem::downloadFile($id);
-        return true;
+
+        return $errors;
+    }
+
+    private function downloadExpirationTimeFile($model)
+    {
+        $errors = [];
+        if (!FileStorageItem::isExpire($model)) {
+            $errors[] = 'Время на скачивание файла истекло!';
+            return $errors;
+        }
+
+        return $errors;
     }
 
 }

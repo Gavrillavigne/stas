@@ -1,5 +1,7 @@
 <?php
 
+namespace frontend\controllers;
+
 use common\models\FileStorageItem;
 use common\models\User;
 

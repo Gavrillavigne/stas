@@ -1,5 +1,7 @@
 <?php
 
+namespace components;
+
 class Router
 {
     private array $routes;
@@ -35,23 +37,14 @@ class Router
                 $internalRoute = preg_replace("~$uriPattern~", $path, $uri);
 
                 // Если есть совпадение, определить какой контроллер и action обрабатывают запрос
-                $segments = explode('/', $internalRoute);
-
-                $controllerName = array_shift($segments) . 'Controller';
-                $controllerName = ucfirst($controllerName);
-
-                $actionName = 'action' . ucfirst((array_shift($segments)));
-
-                $parameters = $segments;
-
-                // Подключить файл класса-контроллера
-                $controllerFile = ROOT . '/frontend/controllers/' . $controllerName . '.php';
-                if (file_exists($controllerFile)) {
-                    include_once $controllerFile;
-                }
+                $namespace = 'frontend\\controllers\\';
+                $parameters = explode('/', $internalRoute);
+                $controllerName = array_shift($parameters) . 'Controller';
+                $controllerName = $namespace . ucfirst($controllerName);
+                $actionName = 'action' . ucfirst((array_shift($parameters)));
 
                 // Создать объект, вызвать action
-                $controllerObject = new $controllerName(); // не работает с неймспейсами
+                $controllerObject = new $controllerName();
                 $result = call_user_func_array(array($controllerObject, $actionName), array($parameters));
 
                 if ($result != null) {
