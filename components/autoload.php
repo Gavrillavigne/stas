@@ -14,7 +14,8 @@ function loadClass($class): bool
 {
     $namespaces = [
         '' => '/',
-        'frontend\controllers\\' => '/frontend/controllers/'
+        'frontend\controllers\\' => '/frontend/controllers/',
+        'services\oauth\\' => '/services/oauth/',
     ];
 
     foreach ($namespaces as $namespace => $path) {
@@ -36,25 +37,22 @@ function loadClass($class): bool
  */
 function loadVendor(string $class): void
 {
-    $packages = [
-        'vlucas/phpdotenv'
-    ];
-
     $namespaces = [
-        'Dotenv\\' => '/src/'
+        'Dotenv\\' => [
+            'path' => '/src/',
+            'package' => 'vlucas/phpdotenv'
+        ]
     ];
 
-    foreach ($namespaces as $namespace => $path) {
+    foreach ($namespaces as $namespace => $params) {
         $pos = strpos($class, $namespace);
         if ($pos !== false) {
-            $class = str_replace($namespace, $path, $class);
-        }
-    }
-
-    foreach ($packages as $package) {
-        $file = ROOT . '/vendor/' . $package . str_replace('\\', '/', $class) . '.php';
-        if (file_exists($file)) {
-            require $file;
+            $class = str_replace($namespace, $params['path'], $class);
+            $file = ROOT . '/vendor/' . $params['package'] . str_replace('\\', '/', $class) . '.php';
+            if (file_exists($file)) {
+                require $file;
+                break;
+            }
         }
     }
 }

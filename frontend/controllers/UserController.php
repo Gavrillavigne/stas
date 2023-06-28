@@ -3,20 +3,34 @@
 namespace frontend\controllers;
 
 use common\models\User;
-use services\oauth\VKontakteOAuth2Service;
+use services\oauth\OAuth2Service;
+use dictionary\OAuth2Dictionary;
 
 class UserController
 {
-    public function actionLogin()
+    /**
+     * @param $params
+     * @return OAuth2Service|null
+     */
+    private function getOAuth2Service($params): ?OAuth2Service
     {
-        $email = '';
-        $password = '';
-        $errors = [];
-        $oauthService = (new VKontakteOAuth2Service('login/'));
+        $redirectUrl = ($params[0] ?? '') . '/';
+        preg_match("/&state=(.*)/", $params[1], $services);
+        $service = $services[1] ?? '';
 
-        // Авторизация через соц. сети
-        if (!empty($_GET['code'])) {
-            $oauthParams = $oauthService->getTokenParams($_GET['code']);
+        if (empty($service)) {
+            $service = $params[1] ?? '';
+        }
+
+        return OAuth2Service::initial(OAuth2Dictionary::$serviceClasses[$service], $redirectUrl);
+    }
+
+    public function actionOAuth2Login($params)
+    {
+        $oauthService = $this->getOAuth2Service($params);
+        $code = $oauthService->getCode();
+        if (!empty($code)) {
+            $oauthParams = $oauthService->getTokenParams($code);
             $token = json_decode(file_get_contents('https://oauth.vk.com/access_token' . '?' . urldecode(http_build_query($oauthParams))), true);
 
             if (!empty($token['access_token'])) {
@@ -29,10 +43,17 @@ class UserController
                 }
             }
 
-            if (!$this->redirectToCabinet($userId)) {
+            if (!$this->redirectToCabinet($userId, true)) {
                 $errors[] = 'Неверные данные для входа через социальную сеть';
             }
         }
+    }
+
+    public function actionLogin()
+    {
+        $email = '';
+        $password = '';
+        $errors = [];
 
         // Обычная авторизация
         if (!empty($_POST['submit'])) {
@@ -51,11 +72,12 @@ class UserController
 
     /**
      * @param $userId
+     * @param bool $isOauth
      * @return bool
      */
-    private function redirectToCabinet($userId)
+    private function redirectToCabinet($userId, bool $isOauth = false)
     {
-        if (!empty($userId) && $this->isValidCaptcha()) {
+        if (!empty($userId) && $this->isValidCaptcha($isOauth)) {
             User::auth($userId);
             header('Location: /cabinet');
             return true;
@@ -147,13 +169,14 @@ class UserController
     }
 
     /**
+     * @param bool $isOauth
      * @return bool
      */
-    protected function isValidCaptcha(): bool
+    protected function isValidCaptcha(bool $isOauth = false): bool
     {
         $result = $this->getCaptcha($_POST['g-recaptcha-response']);
 
-        if ($result->success && $result->score > 0.5) {
+        if (($result->success && $result->score > 0.5) || $isOauth) {
             return true;
         }
 

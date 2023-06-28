@@ -2,41 +2,28 @@
 
 namespace services\oauth;
 
-class VKontakteOAuth2Service
+use GuzzleHttp\Client;
+
+class VKontakteOAuth2Service extends OAuth2Service
 {
-    protected $client_id; // ID приложения
-    protected $client_secret; // Защищённый ключ
-    protected $redirect_uri; // Адрес сайта
-    protected $url = 'http://oauth.vk.com/authorize';
-    protected $params;
-
-    public function __construct($redirectUrl)
+    public function getCode()
     {
-        $this->setParams($redirectUrl);
-    }
+        if (!empty($_GET['code'])) {
+            return $_GET['code'];
+        }
 
-    /**
-     * @return string
-     */
-    public function getLink(): string
-    {
-        return $this->url . '?' . urldecode(http_build_query($this->getParams()));
-    }
+        header('Location: ' . $this->getLink());
 
-    /**
-     * @return array
-     */
-    public function getParams(): array
-    {
-        return $this->params;
+//        $client = new Client(['base_uri' => $this->apiUrl]);
+//        $client->request('GET', $this->getLink());
     }
 
     public function getTokenParams($code): array
     {
         return [
-            'client_id' => $this->client_id,
-            'client_secret' => $this->client_secret,
-            'redirect_uri' => $this->redirect_uri,
+            'client_id' => $this->clientId,
+            'client_secret' => $this->clientSecret,
+            'redirect_uri' => $this->redirectUri,
             'code' => $code
         ];
     }
@@ -52,29 +39,32 @@ class VKontakteOAuth2Service
     }
 
     /**
+     * @param $redirectUrl
      * @return void
      */
     protected function setParams($redirectUrl): void
     {
-        $this->client_id = getenv('VK_ID');
-        $this->client_secret = getenv('VK_SECRET_KEY');
-        $this->redirect_uri = getenv('VK_REDIRECT_URI') . $redirectUrl;
+        $this->clientId = getenv('VK_ID');
+        $this->clientSecret = getenv('VK_SECRET_KEY');
+        $this->redirectUri = getenv('REDIRECT_URI') . $redirectUrl . 'vk/';
+        $this->apiUrl = 'http://oauth.vk.com/authorize';
 
         $this->params = [
-            'client_id' => $this->client_id,
-            'redirect_uri' => $this->redirect_uri,
-            'response_type' => 'code'
+            'client_id' => $this->clientId,
+            'redirect_uri' => $this->redirectUri,
+            'response_type' => 'code',
+            'state' => 'vk'
         ];
     }
 
-    /**
-     * @param $name
-     * @param $value
-     * @return void
-     */
-    public function setParam($name, $value): void
-    {
-        $this->params[$name] = $value;
-    }
+//    /**
+//     * @param $name
+//     * @param $value
+//     * @return void
+//     */
+//    public function setParam($name, $value): void
+//    {
+//        $this->params[$name] = $value;
+//    }
 
 }

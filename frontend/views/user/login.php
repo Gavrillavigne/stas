@@ -1,10 +1,3 @@
-<?php
-
-use services\oauth\VKontakteOAuth2Service;
-
-/* @var $oauthService VKontakteOAuth2Service */
-?>
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -43,8 +36,11 @@ use services\oauth\VKontakteOAuth2Service;
         </div>
 
         <div class="form-group">
-            <a class="btn btn-primary btn-block create-account" href="<?php echo $oauthService->getLink(); ?>">
+            <a class="btn btn-primary btn-block create-account" href="/user/oauth2/login/vk">
                 <i class="fa fa-vk"></i>
+            </a>
+            <a class="btn btn-primary btn-block create-account" href="/user/oauth2/login/mailru">
+                mail.ru
             </a>
         </div>
     </form>
