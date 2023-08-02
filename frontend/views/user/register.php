@@ -1,8 +1,7 @@
 <?php
 
-use services\oauth\VKontakteOAuth2Service;
+use dictionary\AuthDictionary;
 
-/* @var $oauthService VKontakteOAuth2Service */
 ?>
 
 <!DOCTYPE html>
@@ -46,8 +45,11 @@ use services\oauth\VKontakteOAuth2Service;
         </div>
 
         <div class="form-group">
-            <a class="btn btn-primary btn-block create-account" href="<?php echo $oauthService->getLink(); ?>">
+            <a class="btn btn-primary btn-block create-account" href="/user/register/<?php echo AuthDictionary::VK_CLIENT_NAME; ?>">
                 <i class="fa fa-vk"></i>
+            </a>
+            <a class="btn btn-primary btn-block create-account" href="/user/register/<?php echo AuthDictionary::MAILRU_CLIENT_NAME; ?>">
+                mail.ru
             </a>
         </div>
     </form>

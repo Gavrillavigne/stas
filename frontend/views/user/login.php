@@ -1,3 +1,8 @@
+<?php
+
+use dictionary\AuthDictionary;
+?>
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -36,10 +41,10 @@
         </div>
 
         <div class="form-group">
-            <a class="btn btn-primary btn-block create-account" href="/user/oauth2/login/vk">
+            <a class="btn btn-primary btn-block create-account" href="/user/login/<?php echo AuthDictionary::VK_CLIENT_NAME; ?>">
                 <i class="fa fa-vk"></i>
             </a>
-            <a class="btn btn-primary btn-block create-account" href="/user/oauth2/login/mailru">
+            <a class="btn btn-primary btn-block create-account" href="/user/login/<?php echo AuthDictionary::MAILRU_CLIENT_NAME; ?>">
                 mail.ru
             </a>
         </div>

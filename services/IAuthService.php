@@ -2,8 +2,13 @@
 
 namespace services;
 
+use stdClass;
 interface IAuthService
 {
-    public function getUser();
+    /**
+     * @return stdClass|null
+     */
+    public function getUser(): ?stdClass;
 
+    public function registerUser(): ?stdClass;
 }

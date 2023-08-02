@@ -3,8 +3,9 @@
 namespace services\oauth;
 
 use common\models\User;
+use services\IAuthService;
 
-class MailRuOAuth2Service extends OAuth2Service
+class MailRuOAuth2Service extends OAuth2Service implements IAuthService
 {
     /**
      * @param $redirectUrl
@@ -22,6 +23,19 @@ class MailRuOAuth2Service extends OAuth2Service
             'redirect_uri' => $this->redirectUri,
             'response_type' => 'code'
         ];
+    }
+
+    public function getCode()
+    {
+
+    }
+
+    /**
+     * @return stdClass|null
+     */
+    public function getUser(): ?stdClass
+    {
+        return null;
     }
 
 }

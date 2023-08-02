@@ -2,10 +2,16 @@
 
 namespace services\oauth;
 
-use GuzzleHttp\Client;
+use common\models\User;
+use dictionary\AuthDictionary;
+use services\IAuthService;
+use stdClass;
 
-class VKontakteOAuth2Service extends OAuth2Service
+class VKontakteOAuth2Service extends OAuth2Service implements IAuthService
 {
+    /**
+     * @return mixed|void
+     */
     public function getCode()
     {
         if (!empty($_GET['code'])) {
@@ -13,11 +19,12 @@ class VKontakteOAuth2Service extends OAuth2Service
         }
 
         header('Location: ' . $this->getLink());
-
-//        $client = new Client(['base_uri' => $this->apiUrl]);
-//        $client->request('GET', $this->getLink());
     }
 
+    /**
+     * @param $code
+     * @return array
+     */
     public function getTokenParams($code): array
     {
         return [
@@ -28,6 +35,10 @@ class VKontakteOAuth2Service extends OAuth2Service
         ];
     }
 
+    /**
+     * @param $token
+     * @return array
+     */
     public function getUserParams($token): array
     {
         return [
@@ -57,14 +68,67 @@ class VKontakteOAuth2Service extends OAuth2Service
         ];
     }
 
-//    /**
-//     * @param $name
-//     * @param $value
-//     * @return void
-//     */
-//    public function setParam($name, $value): void
-//    {
-//        $this->params[$name] = $value;
-//    }
+    /**
+     * @return array
+     */
+    private function getUserSocial(): array
+    {
+        $code = $this->getCode();
+
+        if (!empty($code)) {
+            $oauthParams = $this->getTokenParams($code);
+            $token = json_decode(file_get_contents('https://oauth.vk.com/access_token' . '?' . urldecode(http_build_query($oauthParams))), true);
+
+            if (!empty($token['access_token'])) {
+                $params = $this->getUserParams($token);
+                $userInfo = json_decode(file_get_contents('https://api.vk.com/method/users.get' . '?' . urldecode(http_build_query($params))), true);
+
+                if (isset($userInfo['response'][0]['id'])) {
+                    return $userInfo['response'][0];
+                }
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * @return stdClass|null
+     */
+    public function getUser(): ?stdClass
+    {
+        $userInfo = $this->getUserSocial();
+
+        if (!empty($userInfo['id'])) {
+            return User::getOauthUserData('vk', $userInfo['id']);
+        }
+
+        return null;
+    }
+
+    /**
+     * @return stdClass|null
+     */
+    public function registerUser(): ?stdClass
+    {
+        $userInfo = $this->getUserSocial();
+
+        if (isset($userInfo['response'][0]['id'])) {
+            $userInfo = $userInfo['response'][0];
+
+
+            if (User::checkSocialIdExists($userInfo['id'], AuthDictionary::VK_CLIENT_NAME)) {
+                $errors[] = 'Такой email уже используется';
+            }
+
+            $insert = User::registerOauth($userInfo, AuthDictionary::VK_CLIENT_NAME);
+
+            if ($insert) {
+                return User::getOauthUserData('vk', $userInfo['id']);
+            }
+        }
+
+        return null;
+    }
 
 }

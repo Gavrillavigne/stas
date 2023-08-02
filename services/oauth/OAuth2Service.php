@@ -4,30 +4,32 @@ namespace services\oauth;
 
 abstract class OAuth2Service
 {
+    /** @var string */
     protected string $redirectUri; // Адрес сайта
+
+    /** @var string */
     protected $clientId; // ID приложения
+
+    /** @var string */
     protected $clientSecret; // Защищённый ключ
-    protected string $apiUrl;
+
+    /** @var string */
+    protected $apiUrl;
+
+    /** @var array */
     protected $params;
 
     /**
      * Когда фабричный метод используется внутри бизнес-логики Создателя,
      * подклассы могут изменять логику косвенно, возвращая из фабричного метода
      * различные типы коннекторов.
-     * @param $redirectUrl
+     * @param array $params
      */
-    public function __construct($redirectUrl)
+    public function __construct(array $params = [])
     {
-        $this->setParams($redirectUrl);
-    }
+        $redirectUrl = ($params['action'] ?? '') . '/';
 
-    /**
-     * Фабричный метод.
-     */
-    public static function initial($service, $redirectUrl)
-    {
-        $service = 'services\\oauth\\' . $service;
-        return new $service($redirectUrl);
+        $this->setParams($redirectUrl);
     }
 
     /**

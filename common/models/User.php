@@ -3,15 +3,16 @@
 namespace common\models;
 
 use common\components\Db;
+use stdClass;
 
 class User
 {
     /**
      * @param string $email
      * @param string $password
-     * @return bool|int
+     * @return stdClass|null
      */
-    public static function checkUserData(string $email, string $password): bool|int
+    public static function getUserData(string $email, string $password): ?stdClass
     {
         $db = Db::getConnection();
         $sql = 'SELECT * FROM user WHERE email = :email AND password = :password';
@@ -21,20 +22,20 @@ class User
         $result->bindParam(':password', $password, \PDO::PARAM_STR);
         $result->execute();
 
-        $user = $result->fetch(\PDO::FETCH_ASSOC);
+        $user = $result->fetch(\PDO::FETCH_OBJ);
         if (!empty($user)) {
-            return $user['id'];
+            return $user;
         }
 
-        return false;
+        return null;
     }
 
     /**
      * @param string $oauthClient
      * @param int $oauthClientUserId
-     * @return bool|int
+     * @return stdClass|null
      */
-    public static function checkOauthUserData(string $oauthClient, int $oauthClientUserId): bool|int
+    public static function getOauthUserData(string $oauthClient, int $oauthClientUserId): ?stdClass
     {
         $db = Db::getConnection();
         $sql = 'SELECT * FROM user WHERE oauth_client = :oauthClient AND oauth_client_user_id = :oauthClientUserId';
@@ -44,12 +45,12 @@ class User
         $result->bindParam(':oauthClientUserId', $oauthClientUserId, \PDO::PARAM_INT);
         $result->execute();
 
-        $user = $result->fetch(\PDO::FETCH_ASSOC);
+        $user = $result->fetch(\PDO::FETCH_OBJ);
         if (!empty($user)) {
-            return $user['id'];
+            return $user;
         }
 
-        return false;
+        return null;
     }
 
     /**
@@ -125,12 +126,35 @@ class User
     }
 
     /**
+     * @param $oauthClientUserId
+     * @param $oauthClient
+     * @return bool
+     */
+    public static function checkSocialIdExists($oauthClientUserId, $oauthClient): bool
+    {
+        $db = Db::getConnection();
+
+        $sql = 'SELECT COUNT(*) FROM user WHERE oauth_client_user_id = :oauthClientUserId AND oauth_client = :oauthClient';
+
+        $result = $db->prepare($sql);
+        $result->bindParam(':oauthClientUserId', $oauthClientUserId, \PDO::PARAM_INT);
+        $result->bindParam(':oauthClient', $oauthClient, \PDO::PARAM_STR);
+        $result->execute();
+
+        if ($result->fetchColumn()) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * @param $name
      * @param $email
      * @param $password
-     * @return mixed
+     * @return bool
      */
-    public static function register($name, $email, $password)
+    public static function register($name, $email, $password): bool
     {
         $db = Db::getConnection();
 
@@ -147,15 +171,15 @@ class User
 
     /**
      * @param array $oauthParams
+     * @param string $oauthClientName
      * @return bool
      */
-    public static function registerOauth(array $oauthParams)
+    public static function registerOauth(array $oauthParams, string $oauthClientName)
     {
         $db = Db::getConnection();
 
         $firstName = $oauthParams['first_name'];
         $lastName = $oauthParams['last_name'];
-        $oauthClient = 'vk';
         $oauthClientUserId = $oauthParams['id'];
 
         $sql = 'INSERT INTO user (first_name, last_name, oauth_client, oauth_client_user_id) '
@@ -164,7 +188,7 @@ class User
         $result = $db->prepare($sql);
         $result->bindParam(':firstName', $firstName, \PDO::PARAM_STR);
         $result->bindParam(':lastName', $lastName, \PDO::PARAM_STR);
-        $result->bindParam(':oauthClient', $oauthClient, \PDO::PARAM_STR);
+        $result->bindParam(':oauthClient', $oauthClientName, \PDO::PARAM_STR);
         $result->bindParam(':oauthClientUserId', $oauthClientUserId, \PDO::PARAM_INT);
 
         return $result->execute();
