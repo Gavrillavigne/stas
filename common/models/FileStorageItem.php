@@ -48,6 +48,7 @@ class FileStorageItem
         $isSecure = 0;
 
         if (empty($_FILES)) {
+            $errors[] = 'Файл не выбран!';
             return $errors;
         }
 
@@ -104,7 +105,7 @@ class FileStorageItem
      * @param $userId
      * @return bool
      */
-    private static function checkSecureDir($userId): bool
+    public static function checkSecureDir($userId): bool
     {
         $filename = self::UPLOADS_DIR . 'secure/' . $userId;
 

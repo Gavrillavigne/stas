@@ -7,6 +7,30 @@ use stdClass;
 
 class User
 {
+    /** @var string */
+    private $name;
+
+    /** @var string */
+    private $firstName;
+
+    /** @var string */
+    private $lastName;
+
+    /** @var string */
+    private $email;
+
+    /** @var string */
+    private $password;
+
+    /** @var int */
+    private $status;
+
+    /** @var int */
+    private $createdAt;
+
+    /** @var int */
+    private $updatedAt;
+
     /**
      * @param string $email
      * @param string $password

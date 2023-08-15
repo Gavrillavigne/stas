@@ -12,3 +12,6 @@
 /logs
 /var
 /uploads
+
+#phpunit
+phpunit.xml
