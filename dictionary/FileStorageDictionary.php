@@ -12,4 +12,6 @@ class FileStorageDictionary
         'jpg' => 'image/jpeg',
     ];
 
+    public static array $allowedFileTypes = ['txt', 'jpg', 'png', 'pdf', 'csv'];
+
 }

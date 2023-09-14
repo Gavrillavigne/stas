@@ -31,6 +31,30 @@ class User
     /** @var int */
     private $updatedAt;
 
+
+    /**
+     * TODO вынести в сервис
+     * @return array
+     */
+    public function getDirectories(): array
+    {
+        $basePath = '/path/to/user/directory';
+        $directories = [];
+
+        if (is_dir($basePath)) {
+            $contents = scandir($basePath);
+
+            foreach ($contents as $item) {
+                if ($item != '.' && $item != '..' && is_dir($basePath . '/' . $item)) {
+                    // Здесь можно добавить дополнительную проверку на доступ пользователя к этой директории
+                    $directories[] = $item;
+                }
+            }
+        }
+
+        return $directories;
+    }
+
     /**
      * @param string $email
      * @param string $password

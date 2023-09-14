@@ -2,6 +2,8 @@
 
 namespace common\models;
 
+use common\models\File;
+
 class Directory
 {
     /** @var string */
@@ -13,15 +15,13 @@ class Directory
     /** @var string */
     private $path;
 
-    /** @var int */
-    private $isSecure;
+//    /** @var int */
+//    private $isSecure;
+//
+//    /** @var int */
+//    private $expirationTime;
 
-    /** @var int */
-    private $expirationTime;
-
-    /** @var int */
-    private $createdAt;
-
-    /** @var int */
-    private $updatedAt;
+    private int $createdAt;
+    private int $updatedAt;
+    private array $files;
 }
