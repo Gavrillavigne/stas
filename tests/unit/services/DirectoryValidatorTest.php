@@ -2,8 +2,8 @@
 
 namespace unit\services;
 
+use app\services\DirectoryValidatorService;
 use PHPUnit\Framework\TestCase;
-use services\DirectoryValidatorService;
 
 class DirectoryValidatorTest extends TestCase
 {

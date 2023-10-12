@@ -2,8 +2,8 @@
 
 namespace unit\services;
 
+use app\services\FileValidatorService;
 use PHPUnit\Framework\TestCase;
-use services\FileValidatorService;
 
 class FileValidatorTest extends TestCase
 {

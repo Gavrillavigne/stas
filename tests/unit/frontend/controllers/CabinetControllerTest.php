@@ -2,8 +2,8 @@
 
 namespace unit\frontend\controllers;
 
+use app\entities\FileStorageItem;
 use PHPUnit\Framework\TestCase;
-use common\models\FileStorageItem;
 
 class CabinetControllerTest extends TestCase
 {

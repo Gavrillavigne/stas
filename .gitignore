@@ -11,7 +11,7 @@
 /runtime
 /logs
 /var
-/uploads
+/infrastructure/storage/uploads
 
 #phpunit
 phpunit.xml

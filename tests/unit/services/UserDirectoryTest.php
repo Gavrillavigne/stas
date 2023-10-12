@@ -2,9 +2,9 @@
 
 namespace unit\services;
 
+use app\entities\User;
+use app\services\DirectoryManagerService;
 use PHPUnit\Framework\TestCase;
-use common\models\User;
-use services\DirectoryManagerService;
 
 class UserDirectoryTest extends TestCase
 {
